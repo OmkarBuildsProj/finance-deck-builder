@@ -1,3 +1,5 @@
+import { SiteNav } from "./components/site-nav";
+
 function UploadIcon() {
   return (
     <svg
@@ -110,21 +112,7 @@ const features = [
 export default function Home() {
   return (
     <div className="flex min-h-full flex-col bg-[#0A0A0A]">
-      <header className="w-full">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-8 py-8">
-          <a href="/" className="text-lg font-semibold tracking-tight">
-            DeckFlow
-          </a>
-          <div className="flex items-center gap-8 text-sm text-gray-400">
-            <a href="#how-it-works" className="transition-colors duration-200 hover:text-white">
-              How It Works
-            </a>
-            <a href="#get-started" className="transition-colors duration-200 hover:text-white">
-              Get Started
-            </a>
-          </div>
-        </nav>
-      </header>
+      <SiteNav />
 
       <main className="flex-1">
         <section className="mx-auto max-w-4xl px-8 py-32 text-center md:py-40">
@@ -137,7 +125,7 @@ export default function Home() {
           </p>
           <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
             <a
-              href="#get-started"
+              href="/upload"
               className="rounded-full bg-[#3B82F6] px-7 py-3 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#2563EB]"
             >
               Get Started
@@ -195,7 +183,7 @@ export default function Home() {
             Ready to build your next deck?
           </h2>
           <a
-            href="#get-started"
+            href="/upload"
             className="mt-10 inline-block rounded-full bg-[#3B82F6] px-7 py-3 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#2563EB]"
           >
             Get Started
