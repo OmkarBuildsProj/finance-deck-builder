@@ -9,6 +9,8 @@ import {
   type DragEvent,
   type KeyboardEvent,
 } from "react";
+import { useRouter } from "next/navigation";
+import { setUploadedFile } from "../lib/upload-session";
 
 const ACCEPTED_EXTENSIONS = [".xlsx", ".xls", ".csv", ".pdf", ".pptx"] as const;
 const ACCEPT = ACCEPTED_EXTENSIONS.join(",");
@@ -111,6 +113,7 @@ function FileTypeIcon({ extension }: { extension: string }) {
 }
 
 export function UploadZone() {
+  const router = useRouter();
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const dragCount = useRef(0);
@@ -278,6 +281,13 @@ export function UploadZone() {
         <button
           type="button"
           disabled={!accepted}
+          onClick={() => {
+            if (!accepted) {
+              return;
+            }
+            setUploadedFile(accepted.file);
+            router.push("/customize");
+          }}
           className="rounded-full bg-[#3B82F6] px-8 py-3 text-sm font-medium text-white transition-all duration-300 ease-out enabled:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-40"
         >
           Continue
