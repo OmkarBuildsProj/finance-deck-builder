@@ -37,6 +37,23 @@ export interface Slide {
 
 export type SlideOutline = Slide[];
 
+export const THEME_IDS = ["corporate", "modern", "light"] as const;
+
+export type ThemeId = (typeof THEME_IDS)[number];
+
+/** Look-and-feel choices from the customize step, sent to `/api/generate`. */
+export interface DeckSettings {
+  theme: ThemeId;
+  /** Hex color, with or without a leading `#`. */
+  accentColor: string;
+  companyName: string;
+  /**
+   * Optional logo as a data URL (`data:image/png;base64,...`),
+   * a pptxgenjs data string (`image/png;base64,...`), or raw base64.
+   */
+  logo?: string | null;
+}
+
 /** Parsed financial file plus the presentation purpose sent to `/api/analyze`. */
 export interface AnalyzeRequest {
   purpose: string;
