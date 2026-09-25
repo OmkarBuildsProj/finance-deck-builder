@@ -57,4 +57,4 @@ Open [http://localhost:3000](http://localhost:3000).
 
 A hosted demo will be available here once the app is deployed:
 
-**[Live Demo](https://your-deckflow-demo.vercel.app)** — replace this link with your Vercel URL.
+**[Live Demo](https://finance-deck-builder.vercel.app)** — replace this link with your Vercel URL.
