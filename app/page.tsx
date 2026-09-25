@@ -92,7 +92,7 @@ const steps = [
 ];
 
 const cardClassName =
-  "rounded-2xl border border-transparent bg-[#111111] p-10 transition duration-300 ease-out hover:-translate-y-1 hover:scale-[1.03] hover:border-[#3B82F6]";
+  "rounded-2xl border border-transparent bg-[#111111] p-6 transition duration-300 ease-out hover:-translate-y-1 hover:scale-[1.03] hover:border-[#3B82F6] hover:shadow-[0_0_28px_rgba(59,130,246,0.18)] sm:p-10";
 
 const features = [
   {
@@ -115,8 +115,8 @@ export default function Home() {
       <SiteNav />
 
       <main className="flex-1">
-        <section className="mx-auto max-w-4xl px-8 py-32 text-center md:py-40">
-          <h1 className="text-5xl font-bold tracking-tight text-white md:text-6xl">
+        <section className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-28 md:px-8 md:py-40">
+          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl">
             Turn Financial Data Into Boardroom-Ready Slides
           </h1>
           <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-gray-400">
@@ -126,20 +126,20 @@ export default function Home() {
           <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
             <a
               href="/upload"
-              className="rounded-full bg-[#3B82F6] px-7 py-3 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#2563EB]"
+              className="rounded-full bg-[#3B82F6] px-7 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.03] hover:bg-[#2563EB] hover:shadow-[0_0_24px_rgba(59,130,246,0.4)]"
             >
               Get Started
             </a>
             <a
               href="#how-it-works"
-              className="rounded-full border border-white/20 px-7 py-3 text-sm font-medium text-white transition-colors duration-200 hover:border-white/40 hover:bg-white/5"
+              className="rounded-full border border-white/20 px-7 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.03] hover:border-white/40 hover:bg-white/5 hover:shadow-[0_0_20px_rgba(255,255,255,0.08)]"
             >
               See How It Works
             </a>
           </div>
         </section>
 
-        <section id="how-it-works" className="mx-auto max-w-6xl px-8 py-24">
+        <section id="how-it-works" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:px-8 md:py-24">
           <h2 className="mb-16 text-center text-3xl font-bold tracking-tight md:text-4xl">
             How It Works
           </h2>
@@ -160,7 +160,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-8 py-24">
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:px-8 md:py-24">
           <h2 className="mb-16 text-center text-3xl font-bold tracking-tight md:text-4xl">
             Built for Finance Professionals
           </h2>
@@ -178,20 +178,20 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="get-started" className="mx-auto max-w-4xl px-8 py-32 text-center">
+        <section id="get-started" className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 md:px-8 md:py-32">
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
             Ready to build your next deck?
           </h2>
           <a
             href="/upload"
-            className="mt-10 inline-block rounded-full bg-[#3B82F6] px-7 py-3 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#2563EB]"
+            className="mt-10 inline-block rounded-full bg-[#3B82F6] px-7 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.03] hover:bg-[#2563EB] hover:shadow-[0_0_24px_rgba(59,130,246,0.4)]"
           >
             Get Started
           </a>
         </section>
       </main>
 
-      <footer className="mx-auto flex w-full max-w-6xl items-center justify-between px-8 py-10">
+      <footer className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-8 sm:px-6 md:px-8 md:py-10">
         <p className="text-sm text-gray-400">Built by Omkar Sathe</p>
         <a
           href="https://github.com/OmkarBuildsProj/finance-deck-builder"

@@ -219,12 +219,12 @@ export function UploadZone() {
         onDragEnter={onDragEnter}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
-        className={`flex min-h-[280px] flex-col items-center justify-center rounded-2xl border-2 border-dashed px-8 py-16 text-center transition-all duration-300 ease-out ${
+        className={`flex min-h-[280px] flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-12 text-center transition-all duration-300 ease-out sm:px-8 sm:py-16 ${
           isDragging
-            ? "border-[#3B82F6] bg-[#3B82F6]/10"
+            ? "scale-[1.01] border-[#3B82F6] bg-[#3B82F6]/10 shadow-[0_0_32px_rgba(59,130,246,0.2)]"
             : accepted
               ? "cursor-default border-[#222222] bg-[#111111]"
-              : "cursor-pointer border-[#222222] bg-transparent hover:border-[#333333] hover:bg-white/[0.02]"
+              : "cursor-pointer border-[#222222] bg-transparent hover:scale-[1.01] hover:border-[#3B82F6]/70 hover:bg-white/[0.02] hover:shadow-[0_0_28px_rgba(59,130,246,0.16)]"
         }`}
       >
         {accepted ? (
@@ -288,7 +288,7 @@ export function UploadZone() {
             setUploadedFile(accepted.file);
             router.push("/customize");
           }}
-          className="rounded-full bg-[#3B82F6] px-8 py-3 text-sm font-medium text-white transition-all duration-300 ease-out enabled:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full rounded-full bg-[#3B82F6] px-8 py-3 text-sm font-medium text-white transition-all duration-300 ease-out enabled:hover:scale-[1.02] enabled:hover:bg-[#2563EB] enabled:hover:shadow-[0_0_24px_rgba(59,130,246,0.35)] disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
         >
           Continue
         </button>

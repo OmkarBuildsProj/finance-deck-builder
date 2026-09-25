@@ -12,9 +12,9 @@ export default function UploadPage() {
     <div className="flex min-h-full flex-col bg-[#0A0A0A]">
       <SiteNav />
 
-      <main className="flex flex-1 flex-col items-center px-8 py-16 md:py-24">
+      <main className="flex flex-1 flex-col items-center px-4 py-12 sm:px-6 md:px-8 md:py-24">
         <div className="w-full max-w-3xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl">
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
             Upload Your Financial Data
           </h1>
           <p className="mt-6 text-lg text-gray-400">

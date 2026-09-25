@@ -11,6 +11,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { Spinner } from "../components/spinner";
 import { setDeckDraft } from "../lib/deck-session";
 import {
   formatFileSize,
@@ -20,6 +21,13 @@ import {
 } from "../lib/upload-session";
 import type { ParsedFile } from "@/lib/parsers/types";
 import type { SlideOutline } from "@/types/slides";
+
+const STATUS_MESSAGES = [
+  "Analyzing your data...",
+  "Identifying key metrics...",
+  "Building slide outline...",
+  "Almost ready...",
+] as const;
 
 type ThemeId = "corporate" | "modern" | "light";
 
@@ -151,7 +159,10 @@ export function CustomizeForm() {
   const [accentColor, setAccentColor] = useState<string>("#3B82F6");
   const [purpose, setPurpose] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [statusIndex, setStatusIndex] = useState(0);
   const [formError, setFormError] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -160,6 +171,25 @@ export function CustomizeForm() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!getUploadedFile()) {
+      router.replace("/upload");
+      return;
+    }
+    setSessionReady(true);
+  }, [router]);
+
+  useEffect(() => {
+    if (!generating) {
+      return;
+    }
+    setStatusIndex(0);
+    const timer = window.setInterval(() => {
+      setStatusIndex((current) => (current + 1) % STATUS_MESSAGES.length);
+    }, 2200);
+    return () => window.clearInterval(timer);
+  }, [generating]);
 
   const onLogoChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -189,9 +219,9 @@ export function CustomizeForm() {
     }
   };
 
-  const onGenerate = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const runGenerate = async () => {
     setFormError(null);
+    setGenerateError(null);
 
     const trimmedPurpose = purpose.trim();
     if (!trimmedPurpose) {
@@ -244,9 +274,16 @@ export function CustomizeForm() {
       });
       router.push("/preview");
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Could not generate the presentation.");
+      setGenerateError(
+        error instanceof Error ? error.message : "Could not generate the presentation.",
+      );
       setGenerating(false);
     }
+  };
+
+  const onGenerate = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void runGenerate();
   };
 
   const fileLabel = uploadedFile?.name ?? uploadedFileData?.name;
@@ -256,11 +293,19 @@ export function CustomizeForm() {
       ? formatFileSize(uploadedFileData.size)
       : null;
 
+  if (!sessionReady) {
+    return (
+      <div className="flex flex-1 items-center justify-center py-24" aria-busy="true">
+        <Spinner className="h-8 w-8 border-[#3B82F6]/30 border-t-[#3B82F6]" />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-2xl">
       <Link
         href="/upload"
-        className="inline-flex items-center gap-2 text-sm text-gray-400 transition-colors duration-300 hover:text-white"
+        className="inline-flex items-center gap-2 text-sm text-gray-400 transition-all duration-300 hover:scale-[1.02] hover:text-white"
       >
         <svg
           width="16"
@@ -279,7 +324,7 @@ export function CustomizeForm() {
       </Link>
 
       <div className="mt-10">
-        <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl">
+        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
           Customize Your Deck
         </h1>
         <p className="mt-4 text-lg text-gray-400">
@@ -347,7 +392,7 @@ export function CustomizeForm() {
             <button
               type="button"
               onClick={() => logoInputRef.current?.click()}
-              className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-[#222222] bg-[#0A0A0A] transition-colors duration-300 hover:border-[#333333]"
+              className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-[#222222] bg-[#0A0A0A] transition-all duration-300 hover:scale-[1.03] hover:border-[#3B82F6] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
               aria-label={logoPreview ? "Change logo" : "Upload logo"}
             >
               {logoPreview ? (
@@ -392,7 +437,7 @@ export function CustomizeForm() {
                   type="button"
                   onClick={() => setTheme(item.id)}
                   aria-pressed={selected}
-                  className={`rounded-2xl border p-3 text-left transition-all duration-300 ${
+                  className={`rounded-2xl border p-3 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_24px_rgba(59,130,246,0.18)] ${
                     selected
                       ? "border-[#3B82F6]"
                       : "border-[#222222] hover:border-[#333333]"
@@ -465,12 +510,56 @@ export function CustomizeForm() {
         <button
           type="submit"
           disabled={generating}
-          className="w-full rounded-full px-8 py-4 text-base font-medium text-white transition-opacity duration-300 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-full px-8 py-4 text-base font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_28px_rgba(59,130,246,0.35)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
           style={{ backgroundColor: accentColor }}
         >
-          {generating ? "Generating…" : "Generate Presentation"}
+          Generate Presentation
         </button>
       </form>
+
+      {generating || generateError ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0A0A0A]/90 px-6 backdrop-blur-sm">
+          <div
+            className="w-full max-w-md rounded-3xl border border-[#222222] bg-[#111111] px-6 py-10 text-center shadow-[0_0_40px_rgba(0,0,0,0.45)] sm:px-10"
+            role="status"
+            aria-live="polite"
+          >
+            {generateError ? (
+              <>
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10 text-red-400">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 8v5" />
+                    <path d="M12 16h.01" />
+                  </svg>
+                </div>
+                <h2 className="mt-6 text-xl font-semibold tracking-tight text-white">
+                  Could not generate your deck
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-gray-400">{generateError}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void runGenerate();
+                  }}
+                  className="mt-8 w-full rounded-full px-8 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_24px_rgba(59,130,246,0.35)]"
+                  style={{ backgroundColor: accentColor }}
+                >
+                  Try Again
+                </button>
+              </>
+            ) : (
+              <>
+                <Spinner className="mx-auto h-12 w-12 border-white/15 border-t-white" />
+                <p className="mt-8 text-lg font-medium text-white">
+                  {STATUS_MESSAGES[statusIndex]}
+                </p>
+                <p className="mt-2 text-sm text-gray-500">This usually takes a few seconds.</p>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

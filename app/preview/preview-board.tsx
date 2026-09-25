@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { Spinner } from "../components/spinner";
 import {
   getDeckDraft,
   setDeckSlides,
@@ -173,8 +175,8 @@ function SlideCard({
         onDrop(fromIndex);
       }}
       onDragEnd={onDragEnd}
-      className={`group relative flex aspect-[16/10] cursor-grab flex-col rounded-2xl border bg-[#111111] p-4 text-left transition duration-300 active:cursor-grabbing ${
-        dropTarget ? "border-white/40" : "border-[#222222] hover:border-[#333333]"
+      className={`group relative flex aspect-[16/10] cursor-grab flex-col rounded-2xl border bg-[#111111] p-4 text-left transition duration-300 hover:scale-[1.02] hover:shadow-[0_0_24px_rgba(59,130,246,0.16)] active:cursor-grabbing ${
+        dropTarget ? "border-white/40" : "border-[#222222] hover:border-[#3B82F6]/60"
       } ${dragging ? "opacity-40" : ""}`}
     >
       <button
@@ -240,7 +242,7 @@ function SlideModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 sm:p-6"
       onClick={onClose}
     >
       <div
@@ -248,7 +250,7 @@ function SlideModal({
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-3xl rounded-3xl border border-[#222222] bg-[#111111] p-8 shadow-2xl md:p-10"
+        className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-[#222222] bg-[#111111] p-5 shadow-2xl sm:p-8 md:p-10"
       >
         <div className="flex items-start justify-between gap-6">
           <div>
@@ -285,13 +287,33 @@ function SlideModal({
 }
 
 export function PreviewBoard() {
+  const router = useRouter();
   const draft = useSyncExternalStore(subscribeDeckDraft, getDeckDraft, () => null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
   const didDrag = useRef(false);
+
+  useEffect(() => {
+    const stored = getDeckDraft();
+    if (!stored || stored.slides.length === 0) {
+      router.replace("/customize");
+      return;
+    }
+    setSessionReady(true);
+  }, [router]);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+    const timer = window.setTimeout(() => setToast(null), 3200);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   const slides = draft?.slides ?? [];
   const settings = draft?.settings;
@@ -341,6 +363,7 @@ export function PreviewBoard() {
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
+      setToast("Your presentation is ready.");
     } catch (error) {
       setDownloadError(error instanceof Error ? error.message : "Could not generate the presentation.");
     } finally {
@@ -348,19 +371,10 @@ export function PreviewBoard() {
     }
   };
 
-  if (!draft) {
+  if (!sessionReady || !draft) {
     return (
-      <div className="mx-auto w-full max-w-2xl py-20 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-white">No slides yet</h1>
-        <p className="mt-4 text-lg text-gray-400">
-          Generate a presentation from the customize step to preview it here.
-        </p>
-        <Link
-          href="/customize"
-          className="mt-10 inline-flex rounded-full border border-[#222222] px-8 py-3 text-sm font-medium text-white transition-colors duration-300 hover:border-[#333333]"
-        >
-          Back to Customize
-        </Link>
+      <div className="flex flex-1 items-center justify-center py-24" aria-busy="true">
+        <Spinner className="h-8 w-8 border-[#3B82F6]/30 border-t-[#3B82F6]" />
       </div>
     );
   }
@@ -368,7 +382,7 @@ export function PreviewBoard() {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col">
       <header>
-        <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl">{title}</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">{title}</h1>
         <p className="mt-3 text-sm text-gray-500">
           {slides.length} {slides.length === 1 ? "slide" : "slides"}
         </p>
@@ -417,9 +431,21 @@ export function PreviewBoard() {
       )}
 
       {downloadError ? (
-        <p className="mt-8 text-sm text-red-500" role="alert">
-          {downloadError}
-        </p>
+        <div
+          className="mt-8 flex flex-col gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+          role="alert"
+        >
+          <p className="text-sm text-red-300">{downloadError}</p>
+          <button
+            type="button"
+            onClick={() => {
+              void download();
+            }}
+            className="rounded-full border border-red-400/40 px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:bg-red-500/20"
+          >
+            Try Again
+          </button>
+        </div>
       ) : null}
 
       <div className="mt-12 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -427,18 +453,28 @@ export function PreviewBoard() {
           type="button"
           onClick={download}
           disabled={downloading || slides.length === 0}
-          className="rounded-full bg-[#3B82F6] px-8 py-3 text-sm font-medium text-white transition-opacity duration-300 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#3B82F6] px-8 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_24px_rgba(59,130,246,0.35)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
           style={settings?.accentColor ? { backgroundColor: settings.accentColor } : undefined}
         >
+          {downloading ? <Spinner className="h-4 w-4" /> : null}
           {downloading ? "Preparing download…" : "Download .pptx"}
         </button>
         <Link
           href="/customize"
-          className="inline-flex items-center justify-center rounded-full border border-[#222222] px-8 py-3 text-sm font-medium text-white transition-colors duration-300 hover:border-[#333333]"
+          className="inline-flex items-center justify-center rounded-full border border-[#222222] px-8 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:border-[#3B82F6] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
         >
           Back to Customize
         </Link>
       </div>
+
+      {toast ? (
+        <div
+          className="toast-in fixed bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl border border-emerald-500/30 bg-[#111111] px-4 py-3 text-center text-sm text-white shadow-[0_0_28px_rgba(16,185,129,0.2)]"
+          role="status"
+        >
+          {toast}
+        </div>
+      ) : null}
 
       {openSlide && openIndex !== null ? (
         <SlideModal slide={openSlide} index={openIndex} onClose={() => setOpenIndex(null)} />

@@ -12,7 +12,7 @@ export default function CustomizePage() {
     <div className="flex min-h-full flex-col bg-[#0A0A0A]">
       <SiteNav />
 
-      <main className="flex flex-1 flex-col px-8 py-12 md:py-20">
+      <main className="flex flex-1 flex-col px-4 py-10 sm:px-6 md:px-8 md:py-20">
         <CustomizeForm />
       </main>
     </div>
