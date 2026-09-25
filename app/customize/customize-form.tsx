@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useEffect,
   useId,
@@ -8,13 +9,17 @@ import {
   useState,
   useSyncExternalStore,
   type ChangeEvent,
+  type FormEvent,
 } from "react";
+import { setDeckDraft } from "../lib/deck-session";
 import {
   formatFileSize,
   getUploadedFile,
   getUploadedFileData,
   subscribeUploadedFile,
 } from "../lib/upload-session";
+import type { ParsedFile } from "@/lib/parsers/types";
+import type { SlideOutline } from "@/types/slides";
 
 type ThemeId = "corporate" | "modern" | "light";
 
@@ -114,7 +119,17 @@ function ThemePreview({
   );
 }
 
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
 export function CustomizeForm() {
+  const router = useRouter();
   const logoInputId = useId();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const logoPreviewUrl = useRef<string | null>(null);
@@ -135,6 +150,8 @@ export function CustomizeForm() {
   const [theme, setTheme] = useState<ThemeId>("corporate");
   const [accentColor, setAccentColor] = useState<string>("#3B82F6");
   const [purpose, setPurpose] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -169,6 +186,66 @@ export function CustomizeForm() {
     setLogoPreview(null);
     if (logoInputRef.current) {
       logoInputRef.current.value = "";
+    }
+  };
+
+  const onGenerate = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormError(null);
+
+    const trimmedPurpose = purpose.trim();
+    if (!trimmedPurpose) {
+      setFormError("Describe what this presentation is for.");
+      return;
+    }
+
+    if (!uploadedFile) {
+      setFormError("Upload your file again so we can analyze it.");
+      return;
+    }
+
+    setGenerating(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", uploadedFile);
+      const parseResponse = await fetch("/api/parse", { method: "POST", body: formData });
+      const parsedBody = (await parseResponse.json()) as ParsedFile & { error?: string };
+      if (!parseResponse.ok) {
+        throw new Error(parsedBody.error ?? "Could not read that file.");
+      }
+
+      const analyzeResponse = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          purpose: trimmedPurpose,
+          headers: parsedBody.headers,
+          rows: parsedBody.rows,
+          sheets: parsedBody.sheets,
+          rawText: parsedBody.rawText,
+        }),
+      });
+      const analyzed = (await analyzeResponse.json()) as SlideOutline | { error?: string };
+      if (!analyzeResponse.ok || !Array.isArray(analyzed)) {
+        const message = !Array.isArray(analyzed) ? analyzed.error : undefined;
+        throw new Error(message ?? "Could not build a slide outline.");
+      }
+
+      const logo = logoFile ? await readFileAsDataUrl(logoFile) : null;
+      setDeckDraft({
+        slides: analyzed,
+        settings: {
+          theme,
+          accentColor,
+          companyName: companyName.trim(),
+          logo,
+        },
+      });
+      router.push("/preview");
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Could not generate the presentation.");
+      setGenerating(false);
     }
   };
 
@@ -233,12 +310,7 @@ export function CustomizeForm() {
         </p>
       )}
 
-      <form
-        className="mt-10 space-y-6"
-        onSubmit={(event) => {
-          event.preventDefault();
-        }}
-      >
+      <form className="mt-10 space-y-6" onSubmit={onGenerate}>
         <section className="rounded-2xl border border-[#222222] bg-[#111111] p-6 md:p-8">
           <label
             htmlFor="company-name"
@@ -384,12 +456,19 @@ export function CustomizeForm() {
           />
         </section>
 
+        {formError ? (
+          <p className="text-sm text-red-500" role="alert">
+            {formError}
+          </p>
+        ) : null}
+
         <button
           type="submit"
-          className="w-full rounded-full px-8 py-4 text-base font-medium text-white transition-opacity duration-300 hover:opacity-90"
+          disabled={generating}
+          className="w-full rounded-full px-8 py-4 text-base font-medium text-white transition-opacity duration-300 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           style={{ backgroundColor: accentColor }}
         >
-          Generate Presentation
+          {generating ? "Generating…" : "Generate Presentation"}
         </button>
       </form>
     </div>
